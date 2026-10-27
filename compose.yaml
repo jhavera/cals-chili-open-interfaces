@@ -1,0 +1,65 @@
+# The truck rally. Point to point: customers walk straight up to a truck by name.
+#
+#   docker compose up -d --build                     park Cal's truck, Vendor B, and the menu board
+#   docker compose run --rm customer                 order from Cal's truck
+#   docker compose run --rm -e TRUCK_URL=http://vendor-b-truck:8080 customer    swap the truck
+#   docker compose --profile inspection up -d        also park the can truck
+#   docker compose run --rm -e TRUCK_URL=http://can-truck:8080 inspector        inspect it
+#   docker compose --profile inspection down         close the lot
+
+services:
+
+  cals-truck:
+    build: .
+    image: cals-chili:1.0
+    environment:
+      KITCHEN: cal
+      TRUCK_NAME: "Cal's Chili Truck"
+    ports:
+      - "8080:8080"
+
+  vendor-b-truck:
+    image: cals-chili:1.0
+    pull_policy: never
+    depends_on: [cals-truck]
+    environment:
+      KITCHEN: instantpot
+      TRUCK_NAME: "Vendor B Chili Co."
+    ports:
+      - "8082:8080"
+
+  can-truck:
+    image: cals-chili:1.0
+    pull_policy: never
+    depends_on: [cals-truck]
+    profiles: [inspection]
+    environment:
+      KITCHEN: can
+      TRUCK_NAME: "Can Truck"
+    ports:
+      - "8083:8080"
+
+  menu-board:
+    image: swaggerapi/swagger-ui:v5.17.14
+    environment:
+      SWAGGER_JSON: /spec/openapi.yaml
+    volumes:
+      - ./openapi.yaml:/spec/openapi.yaml:ro
+    ports:
+      - "8081:8080"
+
+  customer:
+    image: cals-chili:1.0
+    pull_policy: never
+    profiles: [tools]
+    environment:
+      TRUCK_URL: http://cals-truck:8080
+    command: ["java", "-cp", "classes", "customer.HungryCustomer"]
+
+  inspector:
+    image: cals-chili:1.0
+    pull_policy: never
+    profiles: [tools]
+    environment:
+      TRUCK_URL: http://cals-truck:8080
+    command: ["java", "-cp", "classes", "customer.Inspector"]

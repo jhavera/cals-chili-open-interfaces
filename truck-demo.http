@@ -1,0 +1,26 @@
+### IntelliJ HTTP Client (Ultimate edition). Click the green arrow beside each request.
+### Swagger UI at http://localhost:8081 does the same thing in any browser.
+
+### Read the menu board
+GET http://localhost:8080/menu
+
+### Order from Cal's truck
+POST http://localhost:8080/orders
+Content-Type: application/json
+
+{ "dish": "chili", "servings": 12, "heat": "medium" }
+
+### Same order, Vendor B's truck. Same menu, different kitchen.
+POST http://localhost:8082/orders
+Content-Type: application/json
+
+{ "dish": "chili", "servings": 12, "heat": "medium" }
+
+### Somebody always tries
+GET http://localhost:8080/recipe
+
+### Off the menu
+POST http://localhost:8080/orders
+Content-Type: application/json
+
+{ "dish": "tacos", "servings": 4 }

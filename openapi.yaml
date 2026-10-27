@@ -1,0 +1,158 @@
+openapi: 3.1.0
+info:
+  title: Cal's Chili Truck API
+  version: 1.0.0
+  description: |
+    The menu board on the side of every chili truck.
+    Any truck that follows this menu can park in the lot.
+    It says WHAT you can order, never HOW it is cooked.
+
+servers:
+  - url: http://localhost:8080
+    description: Cal's Chili Truck
+  - url: http://localhost:8082
+    description: Vendor B Chili Co.
+  - url: http://localhost:8083
+    description: Can Truck (for inspection demo)
+
+paths:
+  /menu:
+    get:
+      summary: See what's cooking
+      operationId: getMenu
+      responses:
+        "200":
+          description: Today's menu
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Menu"
+
+  /orders:
+    post:
+      summary: Order chili
+      operationId: placeOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderRequest"
+            example:
+              dish: chili
+              servings: 12
+              heat: medium
+      responses:
+        "201":
+          description: Order accepted. Exactly the servings you asked for.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderTicket"
+        "400":
+          description: Not something this truck makes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+
+  /recipe:
+    get:
+      summary: Ask for the secret recipe
+      operationId: getRecipe
+      description: Listed so nobody has to wonder. The answer is always no.
+      responses:
+        "403":
+          description: Nice try.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+
+  /health:
+    get:
+      summary: Is the window open?
+      operationId: getHealth
+      responses:
+        "200":
+          description: Open for business
+
+components:
+  schemas:
+    Menu:
+      type: object
+      properties:
+        truck:
+          type: string
+          example: Cal's Chili Truck
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              dish:
+                type: string
+                example: chili
+              heat:
+                type: array
+                items:
+                  type: string
+                  enum: [mild, medium, hot]
+              maxServings:
+                type: integer
+                example: 500
+        note:
+          type: string
+          example: Recipe not included.
+
+    OrderRequest:
+      type: object
+      required: [dish, servings]
+      properties:
+        dish:
+          type: string
+          enum: [chili]
+        servings:
+          type: integer
+          minimum: 1
+          maximum: 500
+        heat:
+          type: string
+          enum: [mild, medium, hot]
+          default: medium
+
+    OrderTicket:
+      type: object
+      properties:
+        orderId:
+          type: string
+          example: A-1047
+        truck:
+          type: string
+          example: Cal's Chili Truck
+        dish:
+          type: string
+          example: chili
+        heat:
+          type: string
+          example: medium
+        servings:
+          type: integer
+          description: Must equal the servings requested.
+          example: 12
+        hoursSimmered:
+          type: integer
+          example: 3
+        eta:
+          type: string
+          example: 20 minutes
+        cornbread:
+          type: string
+          example: extra
+
+    Message:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Nice try.
